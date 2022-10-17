@@ -1,1 +1,1 @@
-# shop-be
+# Quantazon Bookstore backend

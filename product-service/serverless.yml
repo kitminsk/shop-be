@@ -1,0 +1,39 @@
+# For full config options, check the docs:
+#    docs.serverless.com
+
+service: product-service
+
+frameworkVersion: '3'
+
+# How to setup swagger generation
+# https://www.npmjs.com/package/serverless-auto-swagger
+# plugins:
+#  - serverless-auto-swagger
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: us-east-1
+  # setup profile for AWS CLI.
+  profile: default
+
+functions:
+  getProductsList:
+    handler: handlers/getProductsList.getProductsList
+    events:
+      - http:
+          path: /products
+          method: get
+          cors: true
+  getProductsById:
+    handler: handlers/getProductsById.getProductsById
+    events:
+      - http:
+          path: /products/{id}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: false
