@@ -2,11 +2,14 @@
   "name": "product-service",
   "version": "1.0.0",
   "description": "Product Service",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.194.0",
+    "aws-sdk": "^2.1234.0"
+  }
 }
