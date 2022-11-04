@@ -17,6 +17,23 @@ provider:
   region: us-east-1
   # setup profile for AWS CLI.
   profile: default
+  environment:
+    TABLE_PRODUCTS: 'products'
+    TABLE_STOCKS: 'stocks'
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "arn:aws:dynamodb:${aws:region}:*:table/${self:provider.environment.TABLE_PRODUCTS}"
+            - "arn:aws:dynamodb:${aws:region}:*:table/${self:provider.environment.TABLE_STOCKS}"
 
 functions:
   getProductsList:
@@ -37,3 +54,10 @@ functions:
             parameters:
               paths:
                 id: false
+  createProduct:
+    handler: handlers/createProduct.createProduct
+    events:
+      - http:
+          path: /products
+          method: post
+          cors: true

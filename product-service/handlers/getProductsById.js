@@ -1,11 +1,29 @@
-import { products } from "../data/products.js";
 import { cors } from "../data/cors.js";
+
+import AWS from "aws-sdk";
+
+const ddb = new AWS.DynamoDB.DocumentClient();
+
+const scan = async(params) => {
+    const response = await ddb.scan(params, function ( err, data) {
+        if (err) {
+            return {
+                statusCode: 200,
+                headers: { ...cors },
+                body: JSON.stringify({
+                    message: err.message,
+                }),
+            };
+        }
+    }).promise();
+    return response.Items;
+};
 
 export async function getProductsById(event) {
     console.log(`event: ${JSON.stringify(event)}`);
 
     const { pathParameters } = event;
-    const productId = Number(pathParameters.id);
+    const productId = pathParameters.id;
 
     if (!productId) {
         return {
@@ -17,9 +35,13 @@ export async function getProductsById(event) {
         };
     }
 
-    const product = await products.find((product) => product.id === productId);
-
-    if (!product) {
+    const productTableParams = {
+        TableName: process.env.TABLE_PRODUCTS,
+        FilterExpression: 'id = :id',
+        ExpressionAttributeValues: {':id': productId}
+    }
+    const products = await scan(productTableParams);
+    if (typeof products[0] == 'undefined') {
         return {
             statusCode: 404,
             headers: { ...cors },
@@ -27,6 +49,18 @@ export async function getProductsById(event) {
                 message: "Product Not Found",
             }),
         };
+    }
+    const product = products[0];
+    product.count = 0;
+
+    const stockTableParams = {
+        TableName: process.env.TABLE_STOCKS,
+        FilterExpression: 'product_id = :id',
+        ExpressionAttributeValues: {':id': productId}
+    }
+    const stocks = await scan(stockTableParams);
+    if (typeof stocks[0].count !== 'undefined') {
+        product.count = stocks[0].count;
     }
 
     return {
