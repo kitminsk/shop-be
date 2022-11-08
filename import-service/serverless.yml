@@ -1,0 +1,41 @@
+service: import-service
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: us-east-1
+  # setup profile for AWS CLI.
+  profile: default
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - "s3:ListBucket"
+          Resource:
+            - "arn:aws:s3:::node-in-aws-s3-task5-dzianis"
+        - Effect: Allow
+          Action:
+            - "s3:*"
+          Resource:
+            - "arn:aws:s3:::node-in-aws-s3-task5-dzianis/*"
+functions:
+  importProductsFile:
+    handler: handlers/importProductsFile.importProductsFile
+    events:
+      - http:
+          path: import/{fileName}
+          method: get
+          cors: true
+  importFileParser:
+    handler: handlers/importFileParser.importFileParser
+    events:
+      - s3:
+          bucket: node-in-aws-s3-task5-dzianis
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploaded/
+          existing: true
