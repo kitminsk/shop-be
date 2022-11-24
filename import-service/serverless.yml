@@ -9,6 +9,12 @@ provider:
   region: us-east-1
   # setup profile for AWS CLI.
   profile: default
+  environment:
+    BUCKET: 'node-in-aws-s3-task5-dzianis'
+    TABLE_PRODUCTS: 'products'
+    TABLE_STOCKS: 'stocks'
+    SQS_URL: 'https://sqs.us-east-1.amazonaws.com/647708977940/catalogItemsQueue.fifo'
+#    SQS_ARN: !ImportValue 'CatalogItemsQueueArn'
   iam:
     role:
       statements:
@@ -22,6 +28,11 @@ provider:
             - "s3:*"
           Resource:
             - "arn:aws:s3:::node-in-aws-s3-task5-dzianis/*"
+        - Effect: "Allow"
+          Action:
+            - "sqs:*"
+          Resource:
+            - "arn:aws:sqs:us-east-1:647708977940:catalogItemsQueue.fifo"
 functions:
   importProductsFile:
     handler: handlers/importProductsFile.importProductsFile

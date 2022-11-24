@@ -34,7 +34,14 @@ provider:
           Resource:
             - "arn:aws:dynamodb:${aws:region}:*:table/${self:provider.environment.TABLE_PRODUCTS}"
             - "arn:aws:dynamodb:${aws:region}:*:table/${self:provider.environment.TABLE_STOCKS}"
-
+        - Effect: Allow
+          Action: "sqs:*"
+          Resource:
+            - Fn::GetAtt: [ catalogItemsQueue, Arn ]
+        - Effect: Allow
+          Action: "sns:*"
+          Resource:
+            - Ref: SNSCreateProductTopic
 functions:
   getProductsList:
     handler: handlers/getProductsList.getProductsList
@@ -61,3 +68,61 @@ functions:
           path: /products
           method: post
           cors: true
+  catalogBatchProcess:
+    handler: handlers/catalogBatchProcess.catalogBatchProcess
+    environment:
+      SNS_TOPIC:
+        Ref: SNSCreateProductTopic
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - catalogItemsQueue
+              - Arn
+          batchSize: 5
+          functionResponseType: ReportBatchItemFailures
+
+resources:
+  Resources:
+    DynamoProductTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TABLE_PRODUCTS}
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+    DynamoStockTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TABLE_STOCKS}
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        AttributeDefinitions:
+          - AttributeName: product_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: product_id
+            KeyType: HASH
+    catalogItemsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: catalogItemsQueue.fifo
+        FifoQueue: true
+    SNSCreateProductTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: createProductTopic
+    SNSCreateProductSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: kitminsk@gmail.com
+        Protocol: email
+        TopicArn:
+          Ref: SNSCreateProductTopic
