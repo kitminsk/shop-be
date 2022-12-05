@@ -1,0 +1,21 @@
+service: authorization-service
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-dotenv-plugin
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: us-east-1
+  # setup profile for AWS CLI.
+  profile: default
+  environment:
+    AUTH_USERNAME: ${env:LOGIN}
+    AUTH_PASSWORD: ${env:PASSWORD}
+functions:
+  basicAuthorizer:
+    handler: handler.basicAuthorizer
