@@ -11,6 +11,12 @@ export async function importProductsFile(event) {
     const { queryStringParameters } = event
     const { name } = queryStringParameters || {}
 
+    let headers = {
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS,GET'
+    };
+
     try {
         if (!name) {
             return {
@@ -30,12 +36,13 @@ export async function importProductsFile(event) {
 
         return {
             statusCode: 200,
+            headers: headers,
             body: signedUrl,
         };
     } catch (error) {
         return {
-            statusCode: 500,
-            headers: { ...cors },
+            statusCode: 400,
+            headers: headers,
             body: JSON.stringify(error.message),
         };
     }
